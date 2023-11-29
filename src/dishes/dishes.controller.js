@@ -1,11 +1,17 @@
 const path = require("path");
+
+// Use the existing dish data
 const dishes = require(path.resolve("src/data/dishes-data"));
+
+// Use this function to assign ID's when necessary
 const nextId = require("../utils/nextId");
 
+// This function outputs a list of all existing dish data.
 function list(req, res, next) {
   res.send({ data: dishes });
 }
 
+// This middleware checks if the dish exists. If it does, it'll move on to the next function. If no matching dish is found, it will return 404.
 const dishExists = (req, res, next) => {
   const { dishId } = req.params;
   const foundDish = dishes.find((d) => d.id === dishId);
@@ -17,11 +23,13 @@ const dishExists = (req, res, next) => {
   }
 };
 
+// This function responds with the details of a specific dish.
 function read(req, res, next) {
   const foundDish = res.locals.dish;
   res.send({ data: foundDish });
 }
 
+// This middleware validates the price property of a dish. It checks if the price is missing, less than or equal to 0, or not a number.
 const validatesPrice = (req, res, next) => {
   const input = req.body.data.price;
   if (!input || input <= 0 || typeof input !== "number") {
@@ -31,6 +39,7 @@ const validatesPrice = (req, res, next) => {
   }
 };
 
+// This higher-order function generates middleware to validate the presence of a specified property in the dish data.
 const validateFor = (property) => {
   return function (req, res, next) {
     const input = req.body.data[property];
@@ -42,6 +51,7 @@ const validateFor = (property) => {
   };
 };
 
+// This function creates a new dish, adds it to the dishes array, and responds with the newly created dish.
 function create(req, res, next) {
   const { data: { name, description, price, image_url } } = req.body;
   let newDish = { id: nextId(), name, description, price, image_url };
@@ -49,6 +59,7 @@ function create(req, res, next) {
   res.status(201).send({ data: newDish });
 }
 
+// This middleware validates if the route id matches the dataId when updating a dish.
 const validatesCorrectIdToUpdate = (req, res, next) => {
   const { dishId: routeId } = req.params;
   const dishId = req.body.data.id;
@@ -62,6 +73,7 @@ const validatesCorrectIdToUpdate = (req, res, next) => {
   }
 };
 
+// This function updates the details of an existing dish and responds with the updated dish.
 function update(req, res, next) {
   const foundDish = res.locals.dish;
   const { data: { name, description, price, image_url } } = req.body;
